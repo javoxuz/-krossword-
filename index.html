@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="uz">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Oziq-ovqat sanitariyasi — Krossvord</title>
+	<style>
+			:root{
+				/* subtle light gradient page background */
+				--bg: linear-gradient(180deg,#f3f7ff 0%, #ffffff 100%);
+				--card:#ffffff;
+				/* primary accent (buttons, caret) */
+				--accent:#2563eb; /* blue-600 */
+				/* muted text and secondary UI */
+				--muted:#546174;
+				/* responsive cell size: clamps between 26px and 38px, grows with viewport */
+				--cell-size: clamp(26px, 6.2vw, 38px);
+				--gap:4px;
+			}
+		*{box-sizing:border-box}
+		html,body{margin:0;padding:0;height:100%;width:100%}
+		body{
+			font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+			/* neutral page background (removed purple gradient) */
+			background: var(--bg);
+			-webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+			color:#0f172a;
+			min-height:100vh; display:flex; align-items:center; justify-content:center;
+		}
+		/* when the game page is active, align items to the top so the board isn't vertically centered
+		   which can cause large grids to be clipped on small/mobile screens */
+		body.game-active{align-items:flex-start;padding-top:14px;padding-bottom:28px}
+
+	/* START PAGE */
+		#startPage{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:20px;color:var(--muted);text-align:center;overflow-y:auto}
+		#startPage h1{order:1;font-size:48px;margin:0 0 20px 0;color:var(--accent)}
+		#startPage .cat{order:2;margin-bottom:20px}
+		#startPage p{order:3;margin:0 0 28px 0;max-width:560px}
+		#startBtn{order:4;background:var(--accent);color:#fff;border:0;padding:12px 30px;border-radius:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(37,99,235,0.12)}
+
+		/* GAME PAGE */
+		#gamePage{display:none;width:100%;padding:24px}
+		#gamePage.active{display:block}
+
+		.wrap{width:100%;max-width:1200px;background:var(--card);border-radius:12px;padding:18px;display:grid;grid-template-columns:1fr 380px;gap:18px}
+		header{grid-column:1/3;display:flex;align-items:center;gap:12px}
+
+	.board{background:linear-gradient(180deg,#fff,#fbfdff);padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);overflow:auto;-webkit-overflow-scrolling:touch}
+		.cross-table{border-collapse:collapse;margin:6px auto;user-select:none;display:inline-block}
+		.cross-table td{width:var(--cell-size);height:var(--cell-size);border:1px solid rgba(15,23,42,0.08);vertical-align:middle;text-align:center;padding:0;position:relative}
+		.cross-table td.num::after{content:attr(data-num);position:absolute;left:3px;top:2px;font-size:10px;color:#0f172a;font-weight:600}
+		.cross-table td.let{background:#fff;border:1px solid #cfd8e6;width:var(--cell-size);height:var(--cell-size);box-shadow:0 2px 6px rgba(11,18,32,0.03)}
+		.cross-table td.blank{background:#222;border:1px solid #111;width:var(--cell-size);height:var(--cell-size)}
+		.cross-table td.let{background:linear-gradient(180deg,#ffffff,#fbfdff);}
+		.cross-table td.let:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(37,99,235,0.06)}
+		.cross-table td.let input{width:100%;height:100%;border:0;background:transparent;text-align:center;font-weight:700;font-size:calc(var(--cell-size)/2.2);text-transform:uppercase;caret-color:var(--accent)}
+
+		.panel{padding:12px;border-radius:12px;background:linear-gradient(180deg,#ffffff,#f6f9ff);box-shadow:0 8px 24px rgba(16,24,40,0.06)}
+		.clue{padding:8px;border-radius:8px;margin-bottom:8px;background:#fff}
+		.controls{margin-top:10px;display:flex;gap:8px}
+		.btn{border:0;padding:8px 12px;border-radius:8px;cursor:pointer;background:var(--accent);color:#fff}
+		.btn.secondary{background:transparent;color:var(--accent);border:1px solid rgba(37,99,235,0.12)}
+
+		/* animated cat for start page */
+		@-webkit-keyframes shake{50%{top:6px}}@keyframes shake{50%{top:6px}}
+		@-webkit-keyframes shadow{50%{width:110px;margin-left:-40px}}@keyframes shadow{50%{width:110px;margin-left:-40px}}
+		@-webkit-keyframes tail{50%{-webkit-transform:rotate(38deg);transform:rotate(38deg)}}@keyframes tail{50%{-webkit-transform:rotate(38deg);transform:rotate(38deg)}}
+		@-webkit-keyframes track{to{margin-left:20px}}@keyframes track{to{margin-left:20px}}
+		@-webkit-keyframes eye{50%{top:2px}}@keyframes eye{50%{top:2px}}
+		@-webkit-keyframes mustache_l{50%{-webkit-transform:rotate(-10deg);transform:rotate(-10deg)}}@keyframes mustache_l{50%{-webkit-transform:rotate(-10deg);transform:rotate(-10deg)}}
+		@-webkit-keyframes mustache_r{0%,100%{-webkit-transform:rotateY(180deg) rotateZ(0);transform:rotateY(180deg) rotateZ(0)}50%{-webkit-transform:rotateY(180deg) rotateZ(-10deg);transform:rotateY(180deg) rotateZ(-10deg)}}@keyframes mustache_r{0%,100%{-webkit-transform:rotateY(180deg) rotateZ(0);transform:rotateY(180deg) rotateZ(0)}50%{-webkit-transform:rotateY(180deg) rotateZ(-10deg);transform:rotateY(180deg) rotateZ(-10deg)}}
+		@-webkit-keyframes ear_l{50%{-webkit-transform:rotate(-30deg);transform:rotate(-30deg)}}@keyframes ear_l{50%{-webkit-transform:rotate(-30deg);transform:rotate(-30deg)}}
+		@-webkit-keyframes ear_r{50%{-webkit-transform:rotate(30deg);transform:rotate(30deg)}}@keyframes ear_r{50%{-webkit-transform:rotate(30deg);transform:rotate(30deg)}}
+		@-webkit-keyframes paw_l{50%{left:130px;top:176px}70%{top:160px}}@keyframes paw_l{50%{left:130px;top:176px}70%{top:160px}}
+		@-webkit-keyframes paw_r{25%{top:160px}50%{left:88px;top:176px}}@keyframes paw_r{25%{top:160px}50%{left:88px;top:176px}}
+
+		.cat{position:relative;top:auto;left:auto;width:188px;height:260px;margin:0 auto;color:#000}
+		.cat .paw{position:absolute;top:176px;left:88px;width:20px;height:80px;background:currentcolor;border-radius:20px/0 0 80px 40px;-webkit-transform:rotate(10deg);transform:rotate(10deg);-webkit-animation:paw_l 0.45s infinite linear;animation:paw_l 0.45s infinite linear}
+		.cat .paw:after{position:absolute;content:"";bottom:-5px;left:-4px;width:20px;height:26px;background:currentcolor;border-radius:50%;-webkit-transform:rotate(24deg);transform:rotate(24deg)}
+		.cat .paw:nth-child(2){left:130px;-webkit-animation:paw_r 0.45s infinite linear;animation:paw_r 0.45s infinite linear}
+		.cat .shake{position:absolute;width:100%;top:0;-webkit-animation:shake 0.45s infinite linear;animation:shake 0.45s infinite linear}
+		.cat:before{position:absolute;content:"";top:100%;left:50%;width:130px;height:30px;margin-left:-50px;margin-top:-20px;background:#616161;opacity:0.4;border-radius:50%;-webkit-animation:shadow 0.45s infinite linear;animation:shadow 0.45s infinite linear;-webkit-animation-delay:0.225s;animation-delay:0.225s}
+		.cat:after{position:absolute;content:"";top:100%;left:100%;width:15px;height:10px;margin-left:-30px;margin-top:-10px;background:#616161;opacity:0.3;border-radius:50%;box-shadow:50px 0 #616161,100px 0 #616161,150px 0 #616161,200px 0 #616161,250px 0 #616161,300px 0 #616161;-webkit-animation:track 0.225s infinite linear;animation:track 0.225s infinite linear}
+		.cat .tail{position:absolute;content:"";top:0;right:-4px;width:160px;height:150px;border:20px solid;border-color:currentcolor transparent transparent currentcolor;-webkit-transform:rotate(45deg);transform:rotate(45deg);border-radius:120px/106px 120px 0 120px;box-sizing:border-box;-webkit-animation:tail 0.45s infinite linear;animation:tail 0.45s infinite linear}
+		.cat .tail:after{position:absolute;content:"";width:20px;height:20px;background:currentcolor;border-radius:50%;bottom:0;box-shadow:2px 4px currentcolor,2px 7px currentcolor,2px 10px currentcolor,1px 14px currentcolor,-1px 18px currentcolor,-5px 22px currentcolor,-10px 25px currentcolor,-15px 28px currentcolor,-20px 30px currentcolor}
+		.cat .main{position:absolute;top:14px;right:0;width:144px;height:216px;color:currentcolor}
+		.cat .main .head{position:absolute;bottom:-10px;left:20px;width:104px;height:180px;background:currentcolor;border-radius:55px/100px 100px 65px 65px;-webkit-transform:rotate(40deg);transform:rotate(40deg)}
+		.cat .main .body{position:absolute;right:0;width:130px;height:180px;background:currentcolor;border-radius:65px/70px 70px 100px 100px}
+		.cat .main .body .leg{position:absolute;right:-10px;top:20px;width:50px;height:116px;background:currentcolor;border-radius:25px/0 60px 50px 0}
+		.cat .main .body .leg:before{position:absolute;content:"";bottom:-4px;right:0;width:20px;height:40px;border:3px solid transparent;border-radius:50%;border-left-color:#616161;-webkit-transform:rotate(6deg);transform:rotate(6deg)}
+		.cat .main .body .leg:after{position:absolute;content:"";left:3px;bottom:35px;width:76px;height:70px;border-radius:50%;border:3px solid transparent;border-bottom-color:#616161;-webkit-transform:rotate(65deg);transform:rotate(65deg)}
+		.cat .main .face{position:absolute;bottom:0;width:76px;height:80px}
+		.cat .main .face .nose{position:absolute;bottom:8px;left:50%;width:18px;height:9px;margin-left:-10px;background:#9c1b4d;border-radius:20px/10px 10px 20px 20px}
+		.cat .main .face .mustache_cont{position:absolute;bottom:5px;width:20px;height:10px;-webkit-animation:mustache_l 0.45s infinite linear;animation:mustache_l 0.45s infinite linear}
+		.cat .main .face .mustache_cont:nth-child(2){right:0;-webkit-animation:mustache_r 0.45s infinite linear;animation:mustache_r 0.45s infinite linear}
+		.cat .main .face .mustache{position:absolute;top:0;width:100%;border:1px solid #616161;transform-origin:100% 0;-webkit-transform:rotate(-10deg);transform:rotate(-10deg)}
+		.cat .main .face .mustache:last-child{top:6px;-webkit-transform:rotate(-20deg);transform:rotate(-20deg)}
+		.cat .main .face .eye{position:absolute;top:28px;left:-8px;width:30px;height:30px;background:#fff;border:3px solid #000;border-radius:50%;box-sizing:border-box}
+		.cat .main .face .eye:nth-child(5){top:26px;left:36px}
+		.cat .main .face .eye:after{position:absolute;content:"";width:10px;height:10px;right:1px;top:4px;background:#000;border-radius:50%;-webkit-animation:eye 0.45s infinite linear;animation:eye 0.45s infinite linear}
+		.cat .main .face .brow_cont{position:absolute;top:14px;left:10px;width:10px;height:10px}
+		.cat .main .face .brow_cont:nth-child(7){-webkit-transform:rotateY(180deg) rotateZ(0);transform:rotateY(180deg) rotateZ(0);left:38px}
+		.cat .main .face .brow{position:absolute;top:20%;height:60%;border:1px solid #616161;transform-origin:100% 0;-webkit-transform:rotate(10deg);transform:rotate(10deg)}
+		.cat .main .face .brow:last-child{top:0;height:100%;left:6px;-webkit-transform:rotate(3deg);transform:rotate(3deg)}
+		.cat .main .face .ear_l{position:absolute;top:-17px;width:20px;height:30px;background:currentcolor;border-radius:20px/55px 55px 0 0;transform-origin:50% 100%;overflow:hidden;-webkit-transform:rotate(-20deg);transform:rotate(-20deg);-webkit-animation:ear_l 0.45s infinite linear;animation:ear_l 0.45s infinite linear}
+		.cat .main .face .ear_l .inner{position:absolute;top:5px;left:50%;width:6px;height:14px;margin-left:-4px;background:#616161;border-radius:7px/20px 20px 0 0}
+		.cat .main .face .ear_r{position:absolute;right:0;margin-top:-22px;width:36px;height:30px;transform-origin:50% 100%;overflow:hidden;-webkit-transform:rotate(20deg);transform:rotate(20deg);-webkit-animation:ear_r 0.45s infinite linear;animation:ear_r 0.45s infinite linear}
+		.cat .main .face .ear_r .outer{position:absolute;width:30px;height:200%;border:3px solid #616161;border-radius:20px/55px 55px 0 0}
+		.cat .main .face .ear_r .inner{position:absolute;top:50%;left:50%;width:12px;height:26px;margin-left:-6px;background:#616161;border-radius:50%}
+
+		/* responsive */
+		@media (max-width:1100px){.wrap{grid-template-columns:1fr}}
+			@media (max-width:600px){
+				:root{--cell-size:30px}
+				/* remove outer page padding so the crossword can reach screen edges on phones */
+				body{padding:0}
+				/* tighten game-active spacing on small screens */
+				body.game-active{padding-top:8px;padding-bottom:8px}
+				#startPage h1{font-size:34px}
+				#startBtn{padding:12px 26px}
+				/* switch to a stacked layout on small screens so board is full-width and clues sit below */
+				.wrap{padding:8px; display:flex; flex-direction:column; align-items:stretch; max-width:100vw; border-radius:0}
+				/* limit board height so it can scroll inside the viewport on small screens and remove extra padding */
+				.board{width:100%; padding:6px; max-height: calc(100vh - 140px); border-radius:6px}
+				.panel{order:2; width:100%; margin-top:12px}
+				/* ensure table can scroll horizontally if it doesn't fit; remove outer margins so it sits nearer edges */
+				.cross-table{margin:0; display:block}
+				/* slightly smaller cell size for phones */
+				.cross-table td.let input{font-size:calc(var(--cell-size)/2.4)}
+			}
+	</style>
+</head>
+<body>
+
+	<!-- START PAGE -->
+	<div id="startPage">
+		<!-- title at very top -->
+		<h1>🎓 KROSSVORD</h1>
+		<!-- animated cat below title -->
+		<div class="cat">
+			<div class="paw"></div>
+			<div class="paw"></div>
+			<div class="shake">
+				<div class="tail"></div>
+				<div class="main">
+					<div class="head"></div>
+					<div class="body"><div class="leg"></div></div>
+					<div class="face">
+						<div class="mustache_cont"><div class="mustache"></div><div class="mustache"></div></div>
+						<div class="mustache_cont"><div class="mustache"></div><div class="mustache"></div></div>
+						<div class="nose"></div>
+						<div class="eye"></div>
+						<div class="eye"></div>
+						<div class="brow_cont"><div class="brow"></div><div class="brow"></div></div>
+						<div class="brow_cont"><div class="brow"></div><div class="brow"></div></div>
+						<div class="ear_l"><div class="inner"></div></div>
+						<div class="ear_r"><div class="outer"></div><div class="inner"></div></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- description below cat -->
+		<p>Oziq-ovqat sanitariyasi bo'yicha bilimingizni sinab ko'ring!</p>
+		<!-- button at bottom -->
+		<button id="startBtn">🎮 O'ynashni boshlash</button>
+	</div>
+	<!-- GAME PAGE -->
+	<div id="gamePage">
+		<div class="wrap" role="main">
+			<header>
+				<div>
+					<h1>KROSSVORD</h1>
+					<p style="margin:0;color:#6b7280">Mobil uchun moslashtirilgan</p>
+				</div>
+			</header>
+
+			<!-- LEFT: Board -->
+			<div class="board" aria-label="Crossword board">
+				<table class="cross-table" role="grid" cellspacing="0" cellpadding="0" aria-hidden="false">
+<!-- START OF GRID -->
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="num" data-num="3"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="num" data-num="6"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="num" data-num="2"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="num" data-num="10"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="num" data-num="4"></td><td class="blank"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="num" data-num="9"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="num" data-num="1"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="num" data-num="8"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td>
+	<td class="blank"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td>
+	<td class="blank"></td><td class="let"><input type="text" maxlength="1"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td>
+	<td class="blank"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td>
+</tr>
+<tr valign="middle">
+	<td class="num" data-num="11"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="num" data-num="5"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="num" data-num="7"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td><td class="let"><input type="text" maxlength="1"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="let"><input type="text" maxlength="1"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+</tr>
+<tr valign="middle">
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td>
+	<td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+	<td class="let"><input type="text" maxlength="1"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td>
+</tr>
+				</table>
+
+				<div class="caption" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center">Harflarni kiritish uchun katakka bosing. Telefon uchun moslashtirilgan ko'rinish.</div>
+			</div>
+
+			<!-- RIGHT: Clues & controls -->
+			<aside class="panel" aria-label="Clues">
+				<h3 style="margin-top:0">Savollar</h3>
+				<div class="clues">
+					<div class="clue-group">
+						<div class="clue"><strong>1.</strong> — Oziq-ovqat mahsulotlarini ishlab chiqaruvchi jodagi tozalik qoidalari tizimi.</div>
+						<div class="clue"><strong>2.</strong> — 2025-yil sentabr oyida maktabgacha ta'lim muassasalarida sodir bo'lgan voqea turi.</div>
+						<div class="clue"><strong>3.</strong> — Oziq-ovqat mahsulotlarinisovuqda saqlash jarayoni.</div>
+						<div class="clue"><strong>4.</strong> — Oziq-ovqat mahsulotlari yorlig‘ida ko‘rsatiladigan “muddati tugash sanasi”.</div>
+						<div class="clue"><strong>5.</strong> — Oziq-ovqat mahsulotlari sifati va xavfsizligini boshqarish tizimi nomi.</div>
+						<div class="clue"><strong>6.</strong> — Oziq-ovqat mahsulotlari ishlab chiqaruvchilari uchun gigiyenik nazoratni belgilovchi qisqartma (xalqaro standart).</div>
+						<div class="clue"><strong>7.</strong> — Mahsulotga shisha yoki metall bo‘lagi tushishi natijasidagi xavf turi.</div>
+						<div class="clue"><strong>8.</strong> — Oziq-ovqat mahsulotlarini xavfsiz tayyorlashga oid fan yoki yo‘nalish.</div>
+						<div class="clue"><strong>9.</strong> — Oziq-ovqat tarkibida pestitsid yoki nitratlar ko‘payib ketgan holat — bu ... xavfidir.</div>
+						<div class="clue"><strong>10.</strong> — Mahsulot tarkibida mikroorganizmlar bo‘lsa, bu ... xavf deyiladi.</div>
+						<div class="clue"><strong>11.</strong> — Oziq-ovqat bilan bog‘liq sog‘liqni saqlash masalalari bilan shug‘ullanadigan xalqaro tashkilot qisqartmasi.</div>
+					</div>
+					<div class="controls">
+						<button class="btn secondary" id="clear">Tozalash</button>
+					</div>
+				</div>
+			</aside>
+		</div>
+	</div>
+
+	<script>
+		// Start button
+		document.getElementById('startBtn').addEventListener('click', function(){
+			document.getElementById('startPage').style.display = 'none';
+			document.getElementById('gamePage').classList.add('active');
+			document.body.classList.add('game-active');
+			const first = document.querySelector('.cross-table td.let input');
+			if(first) first.focus();
+		});
+
+		(function(){
+			// Parse grid and assign row/col coordinates to each input
+			const table = document.querySelector('.cross-table');
+			const rows = Array.from(table.querySelectorAll('tr'));
+			const cellMap = {}; // stores {row,col} -> input element
+			const acrossRuns = {}; // number -> array of inputs (across)
+			const downRuns = {}; // number -> array of inputs (down)
+
+			// first pass: map inputs and coords
+			rows.forEach((row, rowIdx) => {
+				const cells = Array.from(row.querySelectorAll('td'));
+				cells.forEach((cell, colIdx) => {
+					if(cell.classList.contains('let')){
+						const input = cell.querySelector('input');
+						if(input){
+							input.dataset.row = rowIdx;
+							input.dataset.col = colIdx;
+							cellMap[rowIdx + ',' + colIdx] = input;
+						}
+					}
+				});
+			});
+
+			// find across runs and attach numbering where available
+			rows.forEach((row, rowIdx) => {
+				const cells = Array.from(row.querySelectorAll('td'));
+				let col = 0;
+				while(col < cells.length){
+					// if this cell is a let, start scanning run
+					if(cells[col].classList.contains('let')){
+						let startCol = col;
+						const runInputs = [];
+						while(col < cells.length && cells[col].classList.contains('let')){
+							const inp = cells[col].querySelector('input');
+							if(inp) runInputs.push(inp);
+							col++;
+						}
+						// check if left sibling exists and has a data-num
+						let number = null;
+						if(startCol-1 >= 0 && cells[startCol-1].dataset && cells[startCol-1].dataset.num) number = cells[startCol-1].dataset.num;
+						// or maybe the first let cell itself carries a data-num
+						if(!number && cells[startCol].dataset && cells[startCol].dataset.num) number = cells[startCol].dataset.num;
+						if(number){
+							acrossRuns[number] = runInputs;
+							// mark inputs as part of this across run
+							runInputs.forEach((inp, idx) => { inp.dataset.across = number; inp.dataset.acrossIndex = idx; });
+							// mark start input
+							if(runInputs[0]) runInputs[0].dataset.startAcross = number;
+						}
+					}else{
+						col++;
+					}
+				}
+			});
+
+			// find down runs (column-wise)
+			const colsCount = rows[0].querySelectorAll('td').length;
+			for(let c=0;c<colsCount;c++){
+				let r = 0;
+				while(r < rows.length){
+					const cells = Array.from(rows[r].querySelectorAll('td'));
+					if(cells[c] && cells[c].classList.contains('let')){
+						let startR = r;
+						const runInputs = [];
+						while(r < rows.length && rows[r].querySelectorAll('td')[c].classList.contains('let')){
+							const inp = rows[r].querySelectorAll('td')[c].querySelector('input');
+							if(inp) runInputs.push(inp);
+							r++;
+						}
+						// check if above sibling has a data-num
+						let number = null;
+						const above = startR-1 >=0 ? rows[startR-1].querySelectorAll('td')[c] : null;
+						const startCell = rows[startR].querySelectorAll('td')[c];
+						if(above && above.dataset && above.dataset.num) number = above.dataset.num;
+						if(!number && startCell && startCell.dataset && startCell.dataset.num) number = startCell.dataset.num;
+						if(number){
+							downRuns[number] = runInputs;
+							runInputs.forEach((inp, idx) => { inp.dataset.down = number; inp.dataset.downIndex = idx; });
+							if(runInputs[0]) runInputs[0].dataset.startDown = number;
+						}
+					}else{
+						r++;
+					}
+				}
+			}
+
+			// Initialize inputs: ensure uppercase & maxlength
+			const inputs = Array.from(document.querySelectorAll('.cross-table td.let input'));
+			let activeAuto = null; // {dir:'across'|'down', number: N}
+			inputs.forEach(inp => {
+				inp.setAttribute('inputmode','text');
+
+				// focus handler: set activeAuto when focusing a numbered run start
+				inp.addEventListener('focus', e => {
+					if(e.target.dataset.startAcross) {
+						activeAuto = {dir:'across', number: e.target.dataset.startAcross};
+					} else if(e.target.dataset.startDown) {
+						activeAuto = {dir:'down', number: e.target.dataset.startDown};
+					} else {
+						activeAuto = null;
+					}
+				});
+
+				inp.addEventListener('blur', e => { /* clear only if leaving start cell */ if(!e.target.dataset.startAcross && !e.target.dataset.startDown) activeAuto = null; });
+
+				inp.addEventListener('input', e => {
+					e.target.value = (e.target.value||'').toUpperCase().slice(0,1);
+					// auto-advance according to activeAuto (if set), else default L->R then next row
+					if(e.target.value){
+						if(activeAuto && activeAuto.dir === 'across' && acrossRuns[activeAuto.number]){
+							const run = acrossRuns[activeAuto.number];
+							const idx = parseInt(e.target.dataset.acrossIndex || 0);
+							if(run[idx+1]) run[idx+1].focus();
+							return;
+						}
+						if(activeAuto && activeAuto.dir === 'down' && downRuns[activeAuto.number]){
+							const run = downRuns[activeAuto.number];
+							const idx = parseInt(e.target.dataset.downIndex || 0);
+							if(run[idx+1]) run[idx+1].focus();
+							return;
+						}
+						// fallback: go right, else first fillable in next row
+						const row = parseInt(e.target.dataset.row);
+						const col = parseInt(e.target.dataset.col);
+						let next = cellMap[(row) + ',' + (col + 1)];
+						if(!next){
+							for(let r = row + 1; r < rows.length; r++){
+								const cells = rows[r].querySelectorAll('td.let input');
+								if(cells.length > 0) { next = cells[0]; break; }
+							}
+						}
+						if(next) next.focus();
+					}
+				});
+				inp.style.touchAction = 'manipulation';
+			});
+
+			// Clear button
+			document.getElementById('clear').addEventListener('click', ()=>{
+				inputs.forEach(i=>i.value='');
+			});
+
+			// Arrow-key navigation (grid-based)
+			document.addEventListener('keydown', function(e){
+				const active = document.activeElement;
+				if(!active || active.tagName.toLowerCase() !== 'input') return;
+				const row = parseInt(active.dataset.row);
+				const col = parseInt(active.dataset.col);
+				if(isNaN(row) || isNaN(col)) return;
+
+				if(e.key === 'ArrowRight'){ 
+					e.preventDefault(); 
+					const next = cellMap[row + ',' + (col + 1)];
+					if(next) next.focus();
+				}
+				if(e.key === 'ArrowLeft'){ 
+					e.preventDefault(); 
+					const next = cellMap[row + ',' + (col - 1)];
+					if(next) next.focus();
+				}
+				if(e.key === 'ArrowDown'){ 
+					e.preventDefault(); 
+					const next = cellMap[(row + 1) + ',' + col];
+					if(next) next.focus();
+				}
+				if(e.key === 'ArrowUp'){ 
+					e.preventDefault(); 
+					const next = cellMap[(row - 1) + ',' + col];
+					if(next) next.focus();
+				}
+			});
+
+		})();
+	</script>
+
+</body>
+</html>
